@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PKH 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─────────────────────────────────────────────
+       CSS 변수  (title.png 색상 추출 후 JS에서 덮어씀)
+    ───────────────────────────────────────────── */
+    :root {
+      --primary:       #4aa8bc;
+      --primary-light: #a2dcea;
+      --primary-dark:  #1f6e80;
+      --accent:        #ede898;
+      --bg:            #edf8fb;
+      --card:          #ffffff;
+      --text:          #1a3a44;
+      --text-light:    #508898;
+      --border:        #aad4e0;
+      --shadow:        0 2px 14px rgba(30,110,130,.13);
+      --player-h:      70px;
+      --r:             12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      background: var(--bg);
+      background-image: radial-gradient(var(--border) 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: var(--player-h);
+    }
+
+    /* ─── App 컨테이너 (모바일 중심, PC에서 가운데 정렬) ─── */
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--card);
+      min-height: 100vh;
+      box-shadow: 0 0 40px rgba(200,80,130,.18);
+      position: relative;
+    }
+
+    /* ─── 상단 타이틀 이미지 ─── */
+    #site-header { width: 100%; background: var(--primary-light); overflow: hidden; }
+    #title-img   { width: 100%; height: 100px; display: block; max-height: 200px; object-fit: cover; object-position: bottom; }
+
+    /* ─── 탭 메뉴 (미니홈피 스타일) ─── */
+    #tab-nav {
+      display: flex;
+      background: var(--primary-light);
+      padding: 6px 10px 0;
+      gap: 3px;
+      border-bottom: 2px solid var(--primary);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 4px 10px;
+      background: rgba(255,255,255,.65);
+      border: 1.5px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all .15s;
+      margin-bottom: -2px;
+      letter-spacing: -.3px;
+    }
+    .tab-btn.active {
+      background: var(--card);
+      color: var(--primary-dark);
+      font-weight: 700;
+      border-color: var(--primary);
+      border-bottom-color: var(--card);
+      position: relative;
+      z-index: 1;
+    }
+    .tab-btn:hover:not(.active) { background: rgba(255,255,255,.88); }
+
+    /* ─── 콘텐츠 영역 ─── */
+    #content {
+      padding: 16px;
+      min-height: 60vh;
+    }
+    .tab-content          { display: none; }
+    .tab-content.active   { display: block; }
+
+    /* ─── 섹션 제목 ─── */
+    .sec-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ─── 방명록 폼 ─── */
+    .gb-form {
+      background: var(--bg);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .gb-form-title { font-size: 13px; font-weight: 700; color: var(--primary-dark); margin-bottom: 10px; }
+    .form-row      { display: flex; gap: 8px; margin-bottom: 8px; }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      background: var(--card);
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(232,160,191,.22);
+    }
+    textarea.form-input { resize: none; height: 80px; line-height: 1.55; }
+
+    .char-count { text-align: right; font-size: 11px; color: var(--text-light); margin: -4px 0 8px; }
+
+    .btn-main {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #1a3a44;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      letter-spacing: .4px;
+    }
+    .btn-main:hover  { opacity: .9; }
+    .btn-main:active { transform: scale(.98); }
+
+    /* ─── 방명록 목록 ─── */
+    .gb-list   { display: flex; flex-direction: column; gap: 8px; }
+    .gb-entry  {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s;
+      position: relative;
+    }
+    .gb-entry:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+
+    .gb-entry-head  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .gb-nick        { font-size: 14px; font-weight: 700; color: var(--primary-dark); }
+    .gb-meta        { display: flex; align-items: center; gap: 6px; }
+    .gb-date        { font-size: 11px; color: var(--text-light); }
+    .gb-lock        { font-size: 14px; }
+    .gb-secret      { font-size: 12px; color: var(--text-light); font-style: italic; letter-spacing: 2px; }
+    .gb-content     { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+    .gb-empty       { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 13px; line-height: 2; }
+
+    /* ─── 메인 포스터 ─── */
+    #main-poster {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 220px - 52px - var(--player-h) - 32px);
+      padding: 8px 0;
+    }
+    #main-poster img {
+      max-width: 100%;
+      max-height: calc(100vh - 220px - 52px - var(--player-h) - 48px);
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      border-radius: 8px;
+    }
+    #poster-info {
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.9;
+    }
+    #poster-info .pi-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      letter-spacing: -.2px;
+    }
+    #poster-info .pi-date {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-light);
+    }
+    #poster-info .pi-place {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    /* ─── 갤러리 ─── */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    .gal-item {
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--border);
+      position: relative;
+    }
+    .gal-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .3s, opacity .3s;
+      display: block;
+    }
+    .gal-item:hover img { transform: scale(1.08); opacity: .88; }
+    .gal-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-light);
+      font-size: 13px;
+      line-height: 2;
+    }
+    .gal-empty code { background: var(--border); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+    /* ─── 모달 (비밀번호 확인) ─── */
+    .modal-ov {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 24px;
+      backdrop-filter: blur(3px);
+    }
+    .modal-ov.hidden { display: none; }
+    .modal-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 24px 20px;
+      width: 100%; max-width: 300px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.25);
+      animation: pop-in .18s ease;
+    }
+    @keyframes pop-in {
+      from { transform: scale(.9); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--primary-dark); text-align: center; margin-bottom: 14px; }
+    .modal-btns  { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-cancel  {
+      flex: 1; padding: 11px;
+      background: var(--bg); color: var(--text-light);
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 13px; cursor: pointer;
+    }
+
+    /* ─── 라이트박스 ─── */
+    .lightbox {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.94);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000;
+    }
+    .lightbox.hidden { display: none; }
+    .lb-img-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+    #lb-img { max-width: 92vw; max-height: 80vh; object-fit: contain; border-radius: 6px; user-select: none; -webkit-user-drag: none; }
+
+    .lb-btn {
+      position: absolute;
+      background: rgba(255,255,255,.16);
+      backdrop-filter: blur(4px);
+      border: none; color: #fff;
+      cursor: pointer; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .lb-btn:hover { background: rgba(255,255,255,.36); }
+    #lb-close { top: 14px; right: 14px; width: 36px; height: 36px; font-size: 15px; }
+    #lb-prev  { left: 12px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; font-size: 22px; }
+    #lb-next  { right: 12px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; font-size: 22px; }
+    #lb-count { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,.6); font-size: 12px; letter-spacing: 1px; }
+
+    /* ─── 고정 음악 플레이어 ─── */
+    #music-player {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--player-h);
+      background: rgba(35,18,30,.96);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      display: flex; align-items: center;
+      padding: 0 14px; gap: 10px;
+      z-index: 500;
+      box-shadow: 0 -3px 20px rgba(0,0,0,.4);
+    }
+    .p-note  { font-size: 20px; flex-shrink: 0; opacity: .65; }
+    #p-info  { flex: 1; overflow: hidden; min-width: 0; }
+    #p-status { font-size: 10px; color: rgba(255,255,255,.4); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .5px; }
+    #p-title  { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    #p-ctrl   { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+    .p-btn    {
+      background: none; border: none; color: rgba(255,255,255,.85);
+      font-size: 18px; width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border-radius: 50%;
+      transition: background .2s, color .2s;
+    }
+    .p-btn:hover    { background: rgba(255,255,255,.16); color: #fff; }
+    #btn-play-pause { background: rgba(255,255,255,.12); font-size: 20px; width: 38px; height: 38px; }
+
+    /* YouTube IFrame (기술적으로 DOM에 존재 + 최소 크기) */
+    #yt-wrap { position: absolute; bottom: 1px; left: 0; width: 1px; height: 1px; overflow: hidden; opacity: .01; }
+
+    /* ─── 토스트 알림 ─── */
+    #toast {
+      position: fixed; bottom: calc(var(--player-h) + 12px); left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(30,60,70,.92); color: #fff;
+      font-size: 13px; padding: 9px 18px; border-radius: 20px;
+      opacity: 0; transition: opacity .25s, transform .25s;
+      z-index: 600; pointer-events: none; white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: rgba(180,50,50,.92); }
+    /* ─── 스크롤바 ─── */
+    ::-webkit-scrollbar       { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ─── 반응형 ─── */
+    @media (max-width: 360px) {
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+      #lb-prev { left: 4px; }
+      #lb-next { right: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ╔══════════ 상단 타이틀 이미지 ══════════╗ -->
+  <header id="site-header">
+    <img src="./images/title.png" id="title-img" alt="PKH 2026" crossorigin="anonymous">
+  </header>
+
+  <!-- ╔══════════ 탭 메뉴 (미니홈피 스타일) ══════════╗ -->
+  <nav id="tab-nav">
+    <button class="tab-btn active" data-tab="main">메인</button>
+    <button class="tab-btn" data-tab="guestbook">방명록</button>
+    <button class="tab-btn" data-tab="gallery">갤러리</button>
+  </nav>
+
+  <!-- ╔══════════ 콘텐츠 ══════════╗ -->
+  <div id="content">
+
+    <!-- 메인 -->
+    <div id="tab-main" class="tab-content active">
+      <div id="main-poster">
+        <img id="poster-img" src="" alt="poster">
+      </div>
+      <div id="poster-info">
+        <div class="pi-title">2026 박경호 생일카페 래빗 러버스 클럽</div>
+        <div class="pi-date">2026.07.30 ~ 2026.08.02</div>
+        <div class="pi-place">카페 더블린</div>
+      </div>
+    </div>
+
+    <!-- 방명록 -->
+    <div id="tab-guestbook" class="tab-content">
+      <div class="gb-form">
+        <div class="gb-form-title">💌 방명록 작성</div>
+        <input type="text" id="gb-nick" class="form-input" placeholder="닉네임 (필수)" maxlength="20" required style="margin-bottom:8px">
+        <textarea id="gb-text" class="form-input" placeholder="내용을 입력하세요 (한글 140자 이내)" maxlength="140"></textarea>
+        <div class="char-count"><span id="char-num">0</span> / 140</div>
+        <button class="btn-main" onclick="submitEntry()">✉ 등록하기</button>
+      </div>
+      <div class="sec-title">💬 방명록 목록</div>
+      <div id="gb-list" class="gb-list"></div>
+    </div>
+
+    <!-- 갤러리 -->
+    <div id="tab-gallery" class="tab-content">
+      <div id="gallery-grid" class="gallery-grid"></div>
+    </div>
+
+  </div><!-- /#content -->
+</div><!-- /#app -->
+
+<!-- 토스트 알림 -->
+<div id="toast"></div>
+
+<!-- ╔══════════ 비밀번호 확인 모달 ══════════╗ -->
+<div id="pw-modal" class="modal-ov hidden">
+  <div class="modal-card">
+    <div class="modal-title">🔒 비밀번호 확인</div>
+    <input type="password" id="modal-pw" class="form-input" placeholder="비밀번호를 입력하세요">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePwModal()">취소</button>
+      <button class="btn-main"   style="flex:1" onclick="checkPassword()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════ 갤러리 라이트박스 ══════════╗ -->
+<div id="lightbox" class="lightbox hidden">
+  <button class="lb-btn" id="lb-close" onclick="closeLb()" aria-label="닫기">✕</button>
+  <button class="lb-btn" id="lb-prev"  onclick="lbMove(-1)" aria-label="이전">‹</button>
+  <div class="lb-img-wrap" onclick="closeLb()">
+    <img id="lb-img" src="" alt="" onclick="event.stopPropagation()">
+  </div>
+  <button class="lb-btn" id="lb-next" onclick="lbMove(1)" aria-label="다음">›</button>
+  <div id="lb-count"></div>
+</div>
+
+<!-- ╔══════════ 고정 음악 플레이어 ══════════╗ -->
+<div id="music-player">
+  <span class="p-note">♪</span>
+  <div id="p-info">
+    <div id="p-status">Now Playing</div>
+    <span id="p-title">재생 대기 중...</span>
+  </div>
+  <div id="p-ctrl">
+    <button class="p-btn" id="btn-prev" onclick="ytPrev()" title="이전 곡">⏮</button>
+    <button class="p-btn" id="btn-play-pause" onclick="ytToggle()" title="재생/일시정지">▶</button>
+    <button class="p-btn" id="btn-next" onclick="ytNext()" title="다음 곡">⏭</button>
+  </div>
+  <!-- YouTube IFrame (재생 제어용, 최소 크기) -->
+  <div id="yt-wrap"><div id="yt-player"></div></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JavaScript
+══════════════════════════════════════════ -->
+<script>
+/* ══════════════════════════════════════
+   ⚙  설정 — 여기만 수정하세요
+══════════════════════════════════════ */
+const CONFIG = {
+  // 방명록 열람 비밀번호 (SHA-256 해시값)
+  // 변환 도구: https://emn178.github.io/online-tools/sha256.html
+  // 아래는 기본값 "1234" 의 해시 → 반드시 변경하세요
+  MASTER_PW_HASH: 'b28a4823bfd4f239799462893a07b96537ec829514a498cb5137d52a5c8a9b8d',
+
+  // ── Google Sheets 연동 ─────────────────────────────
+  // apps-script.gs 를 Apps Script에 배포한 후 URL 입력
+  // (비워두면 Sheets 저장 비활성화)
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwJzVDXRMLyO5hk3OBltVOC1CkM6vuili6VMNM9Bo-rf_6MLpgLKLepLXdacauQr-xzMQ/exec',
+
+  // Apps Script 의 EXPECTED_HASH 와 동일한 비밀번호(평문)를 설정하세요
+  // 전송 시 자동으로 SHA-256 해시로 변환되어 Apps Script로 보내집니다
+  SHEET_SECRET: 'b28a4823bfd4f239799462893a07b96537ec829514a498cb5137d52a5c8a9b8d',
+
+  // YouTube 재생목록 URL: https://www.youtube.com/playlist?list=XXXXXXXX
+  // list= 뒤의 값을 아래에 입력하세요
+  PLAYLIST_ID: 'YOUR_PLAYLIST_ID_HERE',
+
+  // 갤러리 이미지 파일명 목록 (images/ 폴더 안에 넣고 여기에 추가)
+  // 예: ['photo1.jpg', 'photo2.png', 'selfie.webp']
+  GALLERY: [
+    'DSC00283.jpg',
+    'DSC00355.jpg',
+    'DSC00472.jpg',
+    'DSC00491.jpg',
+    'DSC00844.jpg',
+    'DSC00931.jpg',
+    'DSC01002.jpg',
+    'DSC02229.jpg',
+    'DSC03546.jpg',
+    'DSC07565.jpg',
+    // 'photo2.jpg',
+  ],
+
+  // 메인 탭 포스터 이미지 (images/posters/ 폴더)
+  // 탭 진입 시 랜덤으로 1장 표시
+  POSTERS: ['001.png', '002.png', '003.png', '004.png', '005.png'],
+};
+
+/* ══════════════════════════════════════
+   메인 탭 랜덤 포스터
+══════════════════════════════════════ */
+function showRandomPoster() {
+  const list = CONFIG.POSTERS;
+  if (!list || !list.length) return;
+  const name = list[Math.floor(Math.random() * list.length)];
+  document.getElementById('poster-img').src = 'images/posters/' + name;
+}
+
+/* ══════════════════════════════════════
+   탭 전환
+══════════════════════════════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + t).classList.add('active');
+    if (t === 'main') showRandomPoster();  // 메인 탭 진입 시 새 포스터
+  });
+});
+
+/* ══════════════════════════════════════
+   title.png 대표 색상 추출 → 테마 적용
+══════════════════════════════════════ */
+const titleImg = document.getElementById('title-img');
+
+titleImg.addEventListener('load', function () {
+  try {
+    const cv = document.createElement('canvas');
+    const cx = cv.getContext('2d');
+    const sc = 0.15;
+    cv.width  = Math.max(1, Math.floor(this.naturalWidth  * sc));
+    cv.height = Math.max(1, Math.floor(this.naturalHeight * sc));
+    cx.drawImage(this, 0, 0, cv.width, cv.height);
+
+    const px = cx.getImageData(0, 0, cv.width, cv.height).data;
+    const freq = {};
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] < 128) continue;               // 투명 픽셀 제외
+      const r = Math.round(px[i]     / 32) * 32;
+      const g = Math.round(px[i + 1] / 32) * 32;
+      const b = Math.round(px[i + 2] / 32) * 32;
+      const k = r + ',' + g + ',' + b;
+      freq[k] = (freq[k] || 0) + 1;
+    }
+
+    const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+    let col = null;
+    for (const [k] of sorted) {
+      const [r, g, b] = k.split(',').map(Number);
+      const lum = r * .299 + g * .587 + b * .114;
+      if (lum >= 40 && lum <= 210) { col = { r, g, b }; break; }  // 너무 밝거나 어두운 색 제외
+    }
+    if (col) applyTheme(col);
+  } catch (_) {
+    // CORS·캔버스 오류 시 기본 색상 유지
+  }
+});
+
+titleImg.addEventListener('error', function () { this.style.display = 'none'; });
+
+function applyTheme({ r, g, b }) {
+  const lh  = (c, a) => Math.min(255, c + a);
+  const dk  = (c, a) => Math.max(0, c - a);
+  const rgb = (r, g, b) => `rgb(${r},${g},${b})`;
+  const root = document.documentElement;
+  root.style.setProperty('--primary',       rgb(r, g, b));
+  root.style.setProperty('--primary-light', rgb(lh(r,70), lh(g,70), lh(b,70)));
+  root.style.setProperty('--primary-dark',  rgb(dk(r,40), dk(g,40), dk(b,40)));
+  // 보색 계열 악센트: 한색(blue/teal) 계열이면 → 따뜻한 노란색, 난색이면 → 차가운 색
+  const isCool = b > r;
+  const aR = isCool ? lh(r, 160) : dk(r,  60);
+  const aG = isCool ? lh(g,  80) : dk(g,  60);
+  const aB = isCool ? dk(b, 100) : lh(b, 120);
+  root.style.setProperty('--accent',  rgb(aR, aG, aB));
+  root.style.setProperty('--bg',      rgb(lh(r,88), lh(g,88), lh(b,88)));
+  root.style.setProperty('--border',  rgb(lh(r,52), lh(g,52), lh(b,52)));
+}
+
+/* ══════════════════════════════════════
+   SHA-256 (Web Crypto API)
+══════════════════════════════════════ */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ══════════════════════════════════════
+   방명록
+══════════════════════════════════════ */
+// 세션 열람 잠금 상태 (새로고침 시 초기화)
+let _unlocked = false;
+
+const GB_KEY = 'pkh2026_guestbook';
+
+function gbLoad()         { try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; } catch { return []; } }
+function gbSave(entries)  { localStorage.setItem(GB_KEY, JSON.stringify(entries)); }
+
+// XSS 방지용 이스케이프
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function gbRender() {
+  const list    = document.getElementById('gb-list');
+  const entries = gbLoad();
+
+  if (!entries.length) {
+    list.innerHTML = '<div class="gb-empty">✨ 첫 번째 방명록을 남겨주세요!</div>';
+    return;
+  }
+
+  list.innerHTML = [...entries].reverse().map(e => `
+    <div class="gb-entry">
+      <div class="gb-entry-head">
+        <span class="gb-nick">${esc(e.nickname)}</span>
+        <div class="gb-meta">
+          <span class="gb-date">${esc(e.date)}</span>
+          <span class="gb-lock">${_unlocked ? '🔓' : '🔒'}</span>
+        </div>
+      </div>
+      ${_unlocked
+        ? `<div class="gb-content">${esc(e.content)}</div>`
+        : `<div class="gb-secret">· · · 비 밀 · · ·</div>`}
+    </div>
+  `).join('');
+
+  if (!_unlocked) {
+    list.querySelectorAll('.gb-entry').forEach(el => {
+      el.addEventListener('click', openPwModal);
+    });
+  }
+}
+
+// 글자 수 카운터
+document.getElementById('gb-text').addEventListener('input', function () {
+  document.getElementById('char-num').textContent = this.value.length;
+});
+
+function submitEntry() {
+  const nick = document.getElementById('gb-nick').value.trim();
+  const text = document.getElementById('gb-text').value.trim();
+
+  if (!nick)             return alert('닉네임을 입력해주세요.');
+  if (!text)             return alert('내용을 입력해주세요.');
+  if (text.length > 140) return alert('140자 이내로 입력해주세요.');
+
+  const now  = new Date();
+  const pad  = n => String(n).padStart(2, '0');
+  const date = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;
+
+  const entries = gbLoad();
+  const id = Date.now().toString();
+  entries.push({ id, nickname: nick, content: text, date });
+
+  // Google Sheets 저장 후 localStorage 갱신
+  sendToSheet({ id, nickname: nick, content: text, date }, () => {
+    gbSave(entries);
+    document.getElementById('gb-nick').value        = '';
+    document.getElementById('gb-text').value        = '';
+    document.getElementById('char-num').textContent = '0';
+    gbRender();
+  });
+}
+
+// 토스트 알림
+let _toastTimer = null;
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = isError ? 'error show' : 'show';
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.className = ''; }, 2800);
+}
+
+// Google Sheets 전송
+async function sendToSheet(entry, onSuccess) {
+  if (!CONFIG.APPS_SCRIPT_URL) {
+    // URL 미설정 시 localStorage에만 저장
+    onSuccess && onSuccess();
+    showToast('⚠ APPS_SCRIPT_URL 미설정 — 로컬만 저장됨', true);
+    return;
+  }
+
+  const secretHash = await sha256(CONFIG.SHEET_SECRET);
+
+  fetch(CONFIG.APPS_SCRIPT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body:    JSON.stringify({ ...entry, secret: secretHash }),
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.ok) {
+      onSuccess && onSuccess();
+      showToast('✓ 방명록이 저장되었습니다');
+    } else {
+      showToast('✕ 저장 실패: ' + (res.error || 'unknown'), true);
+    }
+  })
+  .catch(err => {
+    // CORS 오류 등 — 로컬에는 저장
+    onSuccess && onSuccess();
+    showToast('⚠ 시트 저장 실패 (로컬 저장됨): ' + err.message, true);
+  });
+}
+
+// 비밀번호 모달
+function openPwModal() {
+  document.getElementById('modal-pw').value         = '';
+  document.getElementById('modal-pw').placeholder   = '비밀번호를 입력하세요';
+  document.getElementById('modal-pw').style.cssText = '';
+  document.getElementById('pw-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-pw').focus(), 50);
+}
+
+function closePwModal() {
+  document.getElementById('pw-modal').classList.add('hidden');
+}
+
+async function checkPassword() {
+  const input = document.getElementById('modal-pw').value;
+  if (!input) return;
+
+  const hash = await sha256(input);
+  if (hash === CONFIG.MASTER_PW_HASH) {
+    _unlocked = true;
+    closePwModal();
+    gbRender();
+  } else {
+    const inp = document.getElementById('modal-pw');
+    inp.style.borderColor = '#e85a5a';
+    inp.style.boxShadow   = '0 0 0 3px rgba(232,90,90,.22)';
+    inp.value             = '';
+    inp.placeholder       = '비밀번호가 틀렸습니다';
+    setTimeout(() => {
+      inp.style.borderColor = '';
+      inp.style.boxShadow   = '';
+      inp.placeholder       = '비밀번호를 입력하세요';
+    }, 1400);
+  }
+}
+
+document.getElementById('modal-pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter')  checkPassword();
+  if (e.key === 'Escape') closePwModal();
+});
+document.getElementById('pw-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('pw-modal')) closePwModal();
+});
+
+/* ══════════════════════════════════════
+   갤러리
+══════════════════════════════════════ */
+function initGallery() {
+  const grid = document.getElementById('gallery-grid');
+  const imgs = CONFIG.GALLERY;
+
+  if (!imgs.length) {
+    grid.innerHTML = '<div class="gal-empty">📷 <code>images/</code> 폴더에 이미지를 추가한 뒤<br><code>CONFIG.GALLERY</code> 배열에 파일명을 입력해주세요</div>';
+    return;
+  }
+
+  grid.innerHTML = imgs.map((name, i) =>
+    `<div class="gal-item" onclick="openLb(${i})">
+       <img src="images/${esc(name)}" alt="gallery ${i + 1}" loading="lazy">
+     </div>`
+  ).join('');
+}
+
+// 라이트박스
+let _lbIdx = 0;
+
+function openLb(i) {
+  _lbIdx = i;
+  document.getElementById('lb-img').src = 'images/' + CONFIG.GALLERY[i];
+  document.getElementById('lb-count').textContent = (i + 1) + ' / ' + CONFIG.GALLERY.length;
+  document.getElementById('lightbox').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLb() {
+  document.getElementById('lightbox').classList.add('hidden');
+  document.getElementById('lb-img').src = '';
+  document.body.style.overflow = '';
+}
+
+function lbMove(dir) {
+  openLb((_lbIdx + dir + CONFIG.GALLERY.length) % CONFIG.GALLERY.length);
+}
+
+// 키보드 단축키
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lightbox').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft')  lbMove(-1);
+  if (e.key === 'ArrowRight') lbMove(1);
+  if (e.key === 'Escape')     closeLb();
+});
+
+// 터치 스와이프 (모바일)
+let _tx = 0;
+const lbEl = document.getElementById('lightbox');
+lbEl.addEventListener('touchstart', e => { _tx = e.changedTouches[0].clientX; }, { passive: true });
+lbEl.addEventListener('touchend',   e => {
+  const dx = _tx - e.changedTouches[0].clientX;
+  if (Math.abs(dx) > 40) lbMove(dx > 0 ? 1 : -1);
+});
+
+/* ══════════════════════════════════════
+   YouTube 음악 플레이어
+══════════════════════════════════════ */
+let _yt      = null;
+let _playing = false;
+let _tTimer  = null;
+
+// YouTube IFrame API 준비 완료 콜백 (전역 필수)
+function onYouTubeIframeAPIReady() {
+  if (CONFIG.PLAYLIST_ID === 'YOUR_PLAYLIST_ID_HERE') {
+    document.getElementById('p-title').textContent = 'CONFIG.PLAYLIST_ID 를 설정해주세요';
+    return;
+  }
+
+  const origin = (location.protocol !== 'file:' && location.hostname)
+    ? location.origin : '';
+
+  _yt = new YT.Player('yt-player', {
+    width: 1, height: 1,
+    playerVars: {
+      listType:        'playlist',
+      list:            CONFIG.PLAYLIST_ID,
+      autoplay:        0,
+      controls:        0,
+      disablekb:       1,
+      fs:              0,
+      rel:             0,
+      modestbranding:  1,
+      ...(origin ? { origin } : {}),
+    },
+    events: {
+      onReady:       ()  => updateTitle(),
+      onStateChange: ev  => onYtState(ev),
+      onError:       ()  => { document.getElementById('p-title').textContent = '재생 오류'; },
+    },
+  });
+}
+
+function onYtState(ev) {
+  const S = YT.PlayerState;
+  if (ev.data === S.PLAYING) {
+    _playing = true;
+    document.getElementById('btn-play-pause').textContent = '⏸';
+    if (_tTimer) clearInterval(_tTimer);
+    _tTimer = setInterval(updateTitle, 1500);
+    updateTitle();
+  } else if (ev.data === S.PAUSED || ev.data === S.ENDED) {
+    _playing = false;
+    document.getElementById('btn-play-pause').textContent = '▶';
+    if (_tTimer) { clearInterval(_tTimer); _tTimer = null; }
+    updateTitle();
+  }
+}
+
+function updateTitle() {
+  if (!_yt || typeof _yt.getVideoData !== 'function') return;
+  try {
+    const d = _yt.getVideoData();
+    if (d && d.title) document.getElementById('p-title').textContent = d.title;
+  } catch (_) {}
+}
+
+function ytToggle() { if (!_yt) return; _playing ? _yt.pauseVideo() : _yt.playVideo(); }
+function ytPrev()   { if (!_yt) return; _yt.previousVideo(); setTimeout(updateTitle, 600); }
+function ytNext()   { if (!_yt) return; _yt.nextVideo();     setTimeout(updateTitle, 600); }
+
+/* ══════════════════════════════════════
+   초기화
+══════════════════════════════════════ */
+gbRender();
+initGallery();
+showRandomPoster();   // 페이지 첫 로드 시 포스터 표시
+</script>
+
+<!-- YouTube IFrame API (onYouTubeIframeAPIReady 정의 이후 로드) -->
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
