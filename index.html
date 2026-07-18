@@ -12,16 +12,16 @@
        CSS 변수  (title.png 색상 추출 후 JS에서 덮어씀)
     ───────────────────────────────────────────── */
     :root {
-      --primary:       #4aa8bc;
-      --primary-light: #a2dcea;
-      --primary-dark:  #1f6e80;
-      --accent:        #ede898;
-      --bg:            #edf8fb;
+      --primary:       #6b9fa8;
+      --primary-light: #b8d4d9;
+      --primary-dark:  #3d6e76;
+      --accent:        #e8e49a;
+      --bg:            #f4f8f9;
       --card:          #ffffff;
       --text:          #1a3a44;
-      --text-light:    #508898;
-      --border:        #aad4e0;
-      --shadow:        0 2px 14px rgba(30,110,130,.13);
+      --text-light:    #6a8e96;
+      --border:        #c0d6da;
+      --shadow:        0 2px 14px rgba(30,110,130,.10);
       --player-h:      70px;
       --r:             12px;
     }
@@ -403,7 +403,7 @@
         <input type="text" id="gb-nick" class="form-input" placeholder="닉네임 (필수)" maxlength="20" required style="margin-bottom:8px">
         <textarea id="gb-text" class="form-input" placeholder="내용을 입력하세요 (한글 140자 이내)" maxlength="140"></textarea>
         <div class="char-count"><span id="char-num">0</span> / 140</div>
-        <button class="btn-main" onclick="submitEntry()">✉ 등록하기</button>
+        <button class="btn-main" onclick="submitEntry()" style="background:#f5f0a0;">✉ 등록하기</button>
       </div>
       <div class="sec-title">💬 방명록 목록</div>
       <div id="gb-list" class="gb-list"></div>
@@ -573,19 +573,20 @@ titleImg.addEventListener('error', function () { this.style.display = 'none'; })
 function applyTheme({ r, g, b }) {
   const lh  = (c, a) => Math.min(255, c + a);
   const dk  = (c, a) => Math.max(0, c - a);
+  // 흰색(255)과 색상을 t 비율로 혼합 (t=0: 원색, t=1: 흰색)
+  const mix = (c, t) => Math.round(c * (1 - t) + 255 * t);
   const rgb = (r, g, b) => `rgb(${r},${g},${b})`;
   const root = document.documentElement;
   root.style.setProperty('--primary',       rgb(r, g, b));
-  root.style.setProperty('--primary-light', rgb(lh(r,70), lh(g,70), lh(b,70)));
+  root.style.setProperty('--primary-light', rgb(mix(r,.55), mix(g,.55), mix(b,.55)));
   root.style.setProperty('--primary-dark',  rgb(dk(r,40), dk(g,40), dk(b,40)));
   // 보색 계열 악센트: 한색(blue/teal) 계열이면 → 따뜻한 노란색, 난색이면 → 차가운 색
   const isCool = b > r;
   const aR = isCool ? lh(r, 160) : dk(r,  60);
   const aG = isCool ? lh(g,  80) : dk(g,  60);
   const aB = isCool ? dk(b, 100) : lh(b, 120);
-  root.style.setProperty('--accent',  rgb(aR, aG, aB));
-  root.style.setProperty('--bg',      rgb(lh(r,88), lh(g,88), lh(b,88)));
-  root.style.setProperty('--border',  rgb(lh(r,52), lh(g,52), lh(b,52)));
+  root.style.setProperty('--accent', rgb(aR, aG, aB));
+  // --bg, --border 는 CSS 기본값 유지 (덮어쓰지 않음 → 민트 필터 방지)
 }
 
 /* ══════════════════════════════════════
