@@ -736,12 +736,11 @@ async function sendToSheet(entry) {
   }
   showToast('✓ 방명록이 저장되었습니다');
   try {
-    const secretHash = await sha256(CONFIG.SHEET_SECRET);
     fetch(CONFIG.APPS_SCRIPT_URL, {
       method:  'POST',
       mode:    'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body:    JSON.stringify({ ...entry, secret: secretHash }),
+      body:    JSON.stringify({ ...entry, secret: CONFIG.SHEET_SECRET }),
     });
   } catch (_) {}
 }
