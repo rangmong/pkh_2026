@@ -475,7 +475,7 @@ const CONFIG = {
   // ── Google Sheets 연동 ─────────────────────────────
   // apps-script.gs 를 Apps Script에 배포한 후 URL 입력
   // (비워두면 Sheets 저장 비활성화)
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwJzVDXRMLyO5hk3OBltVOC1CkM6vuili6VMNM9Bo-rf_6MLpgLKLepLXdacauQr-xzMQ/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzmXxufzIFAUJUlzvGdbwe7lr4M7-wScIS2gZmAaDPeEfjSAAaFX_4vFbdnEqJTuKJQtQ/exec',
 
   // Apps Script 의 EXPECTED_HASH 와 동일한 비밀번호(평문)를 설정하세요
   // 전송 시 자동으로 SHA-256 해시로 변환되어 Apps Script로 보내집니다
@@ -592,20 +592,59 @@ function applyTheme({ r, g, b }) {
    SHA-256 (Web Crypto API)
 ══════════════════════════════════════ */
 async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const bytes = new TextEncoder().encode(str);
+  if (window.crypto && window.crypto.subtle) {
+    const buf = await window.crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+  return _sha256Pure(bytes);  // file:// 등 비보안 컨텍스트 폴백
+}
+
+function _sha256Pure(data) {
+  const K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const r = (v, n) => (v >>> n) | (v << (32 - n));
+  const msg = [...data, 0x80];
+  while (msg.length % 64 !== 56) msg.push(0);
+  const bl = data.length * 8;
+  msg.push(0, 0, 0, 0, (bl >>> 24) & 0xff, (bl >>> 16) & 0xff, (bl >>> 8) & 0xff, bl & 0xff);
+  const h = [...H];
+  for (let i = 0; i < msg.length; i += 64) {
+    const w = [];
+    for (let j = 0; j < 16; j++)
+      w[j] = (msg[i+j*4]<<24)|(msg[i+j*4+1]<<16)|(msg[i+j*4+2]<<8)|msg[i+j*4+3];
+    for (let j = 16; j < 64; j++) {
+      const s0 = r(w[j-15],7)^r(w[j-15],18)^(w[j-15]>>>3);
+      const s1 = r(w[j-2],17)^r(w[j-2],19)^(w[j-2]>>>10);
+      w[j] = (w[j-16]+s0+w[j-7]+s1)|0;
+    }
+    let [a,b,c,d,e,f,g,hv] = h;
+    for (let j = 0; j < 64; j++) {
+      const t1 = (hv+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g))+K[j]+w[j])|0;
+      const t2 = ((r(a,2)^r(a,13)^r(a,22))+((a&b)^(a&c)^(b&c)))|0;
+      hv=g; g=f; f=e; e=(d+t1)|0; d=c; c=b; b=a; a=(t1+t2)|0;
+    }
+    h[0]=(h[0]+a)|0; h[1]=(h[1]+b)|0; h[2]=(h[2]+c)|0; h[3]=(h[3]+d)|0;
+    h[4]=(h[4]+e)|0; h[5]=(h[5]+f)|0; h[6]=(h[6]+g)|0; h[7]=(h[7]+hv)|0;
+  }
+  return h.map(v => ('00000000'+(v>>>0).toString(16)).slice(-8)).join('');
 }
 
 /* ══════════════════════════════════════
    방명록
 ══════════════════════════════════════ */
-// 세션 열람 잠금 상태 (새로고침 시 초기화)
+// 세션 상태 (새로고침 시 초기화 — 로컬스토리지 미사용)
 let _unlocked = false;
-
-const GB_KEY = 'pkh2026_guestbook';
-
-function gbLoad()         { try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; } catch { return []; } }
-function gbSave(entries)  { localStorage.setItem(GB_KEY, JSON.stringify(entries)); }
+let _entries  = [];  // 구글 시트에서 불러온 방명록 목록
 
 // XSS 방지용 이스케이프
 function esc(s) {
@@ -617,15 +656,16 @@ function esc(s) {
 }
 
 function gbRender() {
-  const list    = document.getElementById('gb-list');
-  const entries = gbLoad();
+  const list = document.getElementById('gb-list');
 
-  if (!entries.length) {
-    list.innerHTML = '<div class="gb-empty">✨ 첫 번째 방명록을 남겨주세요!</div>';
+  if (!_entries.length) {
+    list.innerHTML = !_unlocked
+      ? `<div class="gb-empty" style="cursor:pointer" onclick="openPwModal()">🔒 방명록 열람<br><small style="font-size:11px;opacity:.7">클릭해서 비밀번호 입력</small></div>`
+      : '<div class="gb-empty">✨ 첫 번째 방명록을 남겨주세요!</div>';
     return;
   }
 
-  list.innerHTML = [...entries].reverse().map(e => `
+  list.innerHTML = [..._entries].reverse().map(e => `
     <div class="gb-entry">
       <div class="gb-entry-head">
         <span class="gb-nick">${esc(e.nickname)}</span>
@@ -664,18 +704,18 @@ function submitEntry() {
   const pad  = n => String(n).padStart(2, '0');
   const date = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;
 
-  const entries = gbLoad();
-  const id = Date.now().toString();
-  entries.push({ id, nickname: nick, content: text, date });
+  const id    = Date.now().toString();
+  const entry = { id, nickname: nick, content: text, date };
 
-  // Google Sheets 저장 후 localStorage 갱신
-  sendToSheet({ id, nickname: nick, content: text, date }, () => {
-    gbSave(entries);
-    document.getElementById('gb-nick').value        = '';
-    document.getElementById('gb-text').value        = '';
-    document.getElementById('char-num').textContent = '0';
-    gbRender();
-  });
+  // 메모리에 낙관적 추가 (로컬스토리지 미사용)
+  _entries.push(entry);
+  document.getElementById('gb-nick').value        = '';
+  document.getElementById('gb-text').value        = '';
+  document.getElementById('char-num').textContent = '0';
+  gbRender();
+
+  // 구글 시트로 전송 (fire-and-forget)
+  sendToSheet(entry);
 }
 
 // 토스트 알림
@@ -688,36 +728,35 @@ function showToast(msg, isError) {
   _toastTimer = setTimeout(() => { t.className = ''; }, 2800);
 }
 
-// Google Sheets 전송
-async function sendToSheet(entry, onSuccess) {
+// Google Sheets 전송 (fire-and-forget, no-cors)
+async function sendToSheet(entry) {
   if (!CONFIG.APPS_SCRIPT_URL) {
-    // URL 미설정 시 localStorage에만 저장
-    onSuccess && onSuccess();
-    showToast('⚠ APPS_SCRIPT_URL 미설정 — 로컬만 저장됨', true);
+    showToast('⚠ APPS_SCRIPT_URL 미설정', true);
     return;
   }
+  showToast('✓ 방명록이 저장되었습니다');
+  try {
+    const secretHash = await sha256(CONFIG.SHEET_SECRET);
+    fetch(CONFIG.APPS_SCRIPT_URL, {
+      method:  'POST',
+      mode:    'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify({ ...entry, secret: secretHash }),
+    });
+  } catch (_) {}
+}
 
-  const secretHash = await sha256(CONFIG.SHEET_SECRET);
-
-  fetch(CONFIG.APPS_SCRIPT_URL, {
-    method:  'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body:    JSON.stringify({ ...entry, secret: secretHash }),
-  })
-  .then(r => r.json())
-  .then(res => {
-    if (res.ok) {
-      onSuccess && onSuccess();
-      showToast('✓ 방명록이 저장되었습니다');
-    } else {
-      showToast('✕ 저장 실패: ' + (res.error || 'unknown'), true);
-    }
-  })
-  .catch(err => {
-    // CORS 오류 등 — 로컬에는 저장
-    onSuccess && onSuccess();
-    showToast('⚠ 시트 저장 실패 (로컬 저장됨): ' + err.message, true);
-  });
+// Google Sheets에서 방명록 목록 불러오기
+async function fetchEntries(hash) {
+  if (!CONFIG.APPS_SCRIPT_URL) return;
+  try {
+    const url  = CONFIG.APPS_SCRIPT_URL + '?format=json&secret=' + encodeURIComponent(hash);
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.entries)) _entries = data.entries;
+  } catch (err) {
+    showToast('⚠ 목록 로드 실패: ' + err.message, true);
+  }
 }
 
 // 비밀번호 모달
@@ -741,6 +780,8 @@ async function checkPassword() {
   if (hash === CONFIG.MASTER_PW_HASH) {
     _unlocked = true;
     closePwModal();
+    showToast('목록을 불러오는 중...');
+    await fetchEntries(hash);
     gbRender();
   } else {
     const inp = document.getElementById('modal-pw');
