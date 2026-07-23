@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2026 박경호 생일 카페 - 레빗러버스 클럽</title>
+
+  <!-- ── PWA ─────────────────────────────────────── -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#6b9fa8">
+  <!-- Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- iOS Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="레빗러버스클럽">
+  <link rel="apple-touch-icon" href="./images/icon-180.png">
+  <!-- ─────────────────────────────────────────────── -->
+  <link rel=" shortcut icon " href="./images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="./images/favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -67,19 +81,19 @@
 
     .tab-btn {
       flex: 1;
-      padding: 8px 4px 10px;
+      padding: 8px 2px 10px;
       background: rgba(255,255,255,.65);
       border: 1.5px solid var(--border);
       border-bottom: none;
       border-radius: 8px 8px 0 0;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 10px;
       font-weight: 500;
       color: var(--text-light);
       cursor: pointer;
       transition: all .15s;
       margin-bottom: -2px;
-      letter-spacing: -.3px;
+      letter-spacing: -.4px;
     }
     .tab-btn.active {
       background: var(--card);
@@ -111,6 +125,16 @@
       display: flex;
       align-items: center;
       gap: 5px;
+    }
+    .info-notice {
+      background: linear-gradient(135deg, rgba(255,240,160,.55), rgba(200,230,255,.45));
+      border-left: 3px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text);
+      margin-bottom: 14px;
+      line-height: 1.6;
     }
 
     /* ─── 방명록 폼 ─── */
@@ -352,6 +376,57 @@
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #toast.error { background: rgba(180,50,50,.92); }
+    /* ─── 토끼관찰일지 ─── */
+    .diary-q { margin-bottom: 14px; }
+    .diary-q-label { display: flex; align-items: baseline; gap: 7px; margin-bottom: 6px; }
+    .diary-q-num {
+      font-size: 10px; font-weight: 700; color: var(--card);
+      background: var(--primary); border-radius: 10px;
+      padding: 1px 6px; flex-shrink: 0; min-width: 22px; text-align: center;
+    }
+    .diary-q-text { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; white-space: pre-line; }
+    .diary-answer {
+      width: 100%; padding: 8px 12px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 13px;
+      background: var(--card); color: var(--text);
+      outline: none; resize: none; height: 60px; line-height: 1.55;
+      transition: border-color .2s; -webkit-appearance: none;
+    }
+    .diary-answer:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(107,159,168,.18); }
+    .diary-answer[readonly] {
+      background: var(--bg);
+      color: var(--text-light);
+      cursor: default;
+      border-color: transparent;
+    }
+    .diary-actions .btn-main { flex: 1; }
+
+    /* ─── 토끼관찰일지 읽기 로딩 ─── */
+    #diary-loading {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      min-height: 52vh;
+      padding: 40px 0;
+    }
+    #diary-loading.show { display: flex; }
+    #diary-loading-text {
+      font-size: 13px;
+      color: var(--text-light);
+      letter-spacing: .2px;
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: diary-spin .8s linear infinite;
+    }
+    @keyframes diary-spin { to { transform: rotate(360deg); } }
+
     /* ─── 스크롤바 ─── */
     ::-webkit-scrollbar       { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -378,7 +453,9 @@
   <nav id="tab-nav">
     <button class="tab-btn active" data-tab="main">메인</button>
     <button class="tab-btn" data-tab="guestbook">방명록</button>
+    <button class="tab-btn" data-tab="report">활동보고서</button>
     <button class="tab-btn" data-tab="gallery">갤러리</button>
+    <button class="tab-btn" data-tab="diary">토끼관찰일지</button>
   </nav>
 
   <!-- ╔══════════ 콘텐츠 ══════════╗ -->
@@ -393,6 +470,11 @@
         <div class="pi-title">2026 박경호 생일카페 래빗 러버스 클럽</div>
         <div class="pi-date">2026.07.30 ~ 2026.08.02</div>
         <div class="pi-place">카페 더블린</div>
+      </div>
+      <!-- P.K.H.☆ 팬 메시지 -->
+      <div id="main-fan-section" style="display:none; margin-top:20px;">
+        <div class="sec-title">💌 From.경호</div>
+        <div id="main-fan-list"></div>
       </div>
     </div>
 
@@ -414,6 +496,40 @@
       <div id="gallery-grid" class="gallery-grid"></div>
     </div>
 
+    <!-- 활동보고서 -->
+    <div id="tab-report" class="tab-content">
+      <div class="sec-title">📝 활동보고서</div>
+      <div class="info-notice">📌 클럽 일원으로 작성해야할 활동 보고서입니다</div>
+      <div id="report-form"></div>
+      <div class="diary-actions" style="border-top:none; margin-top:10px; padding-top:0;">
+        <button class="btn-main" onclick="submitReport()" style="background:#f5f0a0;">📨 제출하기</button>
+      </div>
+    </div>
+
+    <!-- 토끼관찰일지 -->
+    <div id="tab-diary" class="tab-content">
+      <div id="diary-loading">
+        <div class="spinner"></div>
+        <div id="diary-loading-text">답변 불러오는 중…</div>
+      </div>
+      <div id="diary-content">
+        <div class="sec-title">🐰 토끼관찰일지</div>
+        <div id="diary-form"></div>
+        <!-- 팬 메시지 (선택) -->
+        <div id="diary-fan-section" style="margin-top:20px; padding-top:16px; border-top:1px dashed var(--border);">
+          <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:6px;">
+            <span style="font-size:13px; font-weight:700; color:var(--primary-dark);">💌 팬들에게 남기고 싶은 말?</span>
+            <span style="font-size:11px; color:var(--text-light);">(선택)</span>
+          </div>
+          <textarea id="d-fan-msg" class="diary-answer" placeholder="방명록에도 함께 남겨드립니다" maxlength="140" style="height:76px;"></textarea>
+          <div style="text-align:right; font-size:11px; color:var(--text-light); margin-top:3px;"><span id="fan-char-num">0</span> / 140</div>
+        </div>
+        <div id="diary-submit-area" class="diary-actions" style="border-top:none; margin-top:10px; padding-top:0; display:none;">
+          <button class="btn-main" onclick="doSubmitDiary()" style="background:#f5f0a0;">✉ 저장하기</button>
+        </div>
+      </div><!-- /#diary-content -->
+    </div>
+
   </div><!-- /#content -->
 </div><!-- /#app -->
 
@@ -428,6 +544,35 @@
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closePwModal()">취소</button>
       <button class="btn-main"   style="flex:1" onclick="checkPassword()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════ 토끼관찰일지 모드 선택 ══════════╗ -->
+<div id="diary-mode-modal" class="modal-ov hidden">
+  <div class="modal-card">
+    <div class="modal-title">🐰 토끼관찰일지</div>
+    <!-- 로딩 상태 -->
+    <div id="diary-mode-loading" style="display:flex; flex-direction:column; align-items:center; gap:12px; padding:10px 0 6px;">
+      <div class="spinner" style="width:32px; height:32px; border-width:3px;"></div>
+      <div style="font-size:12px; color:var(--text-light);">답변 확인 중...</div>
+    </div>
+    <!-- 버튼 영역 (로딩 완료 후 표시) -->
+    <p id="diary-mode-desc" style="display:none; font-size:12px; color:var(--text-light); text-align:center; margin-bottom:14px; line-height:1.6;">어떤 모드로 볼까요?</p>
+    <div id="diary-mode-btns" class="modal-btns" style="display:none;">
+      <button class="btn-main" id="diary-read-btn" style="flex:1" onclick="diaryModeView()">📖 읽기</button>
+      <button class="btn-main" id="diary-write-btn" style="flex:1" onclick="diaryModeWrite()">✏ 쓰기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════ 토끼관찰일지 덮어쓰기 확인 ══════════╗ -->
+<div id="diary-overwrite-modal" class="modal-ov hidden">
+  <div class="modal-card">
+    <div class="modal-title">⚠️ 알림</div>
+    <p style="font-size:13px; color:var(--text); text-align:center; margin-bottom:4px; line-height:1.8;">해당 관찰일지 내용이 있습니다.<br>그래도 저장하시겠습니까?</p>
+    <div class="modal-btns" style="margin-top:14px;">
+      <button class="btn-main" style="flex:1; background:#f5f0a0;" onclick="document.getElementById('diary-overwrite-modal').classList.add('hidden')">확인</button>
     </div>
   </div>
 </div>
@@ -475,7 +620,7 @@ const CONFIG = {
   // ── Google Sheets 연동 ─────────────────────────────
   // apps-script.gs 를 Apps Script에 배포한 후 URL 입력
   // (비워두면 Sheets 저장 비활성화)
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzmXxufzIFAUJUlzvGdbwe7lr4M7-wScIS2gZmAaDPeEfjSAAaFX_4vFbdnEqJTuKJQtQ/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxnhpzTrtTtyc5YMr2WZlVyGd7gKrIJsYqUHMgJLd4OsxCExuau2kbYgGHGacjMg5avrw/exec',
 
   // Apps Script 의 EXPECTED_HASH 와 동일한 비밀번호(평문)를 설정하세요
   // 전송 시 자동으로 SHA-256 해시로 변환되어 Apps Script로 보내집니다
@@ -503,7 +648,7 @@ const CONFIG = {
 
   // 메인 탭 포스터 이미지 (images/posters/ 폴더)
   // 탭 진입 시 랜덤으로 1장 표시
-  POSTERS: ['001.png', '002.png', '003.png', '004.png', '005.png'],
+  POSTERS: ['001.png', '002.png', '003.png', '004.png', '005.png','006.png'],
 };
 
 /* ══════════════════════════════════════
@@ -522,11 +667,12 @@ function showRandomPoster() {
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const t = btn.dataset.tab;
+    if (t === 'diary') { openDiaryModeModal(); return; }
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + t).classList.add('active');
-    if (t === 'main') showRandomPoster();  // 메인 탭 진입 시 새 포스터
+    if (t === 'main') showRandomPoster();
   });
 });
 
@@ -644,8 +790,10 @@ function _sha256Pure(data) {
    방명록
 ══════════════════════════════════════ */
 // 세션 상태 (새로고침 시 초기화 — 로컬스토리지 미사용)
-let _unlocked = false;
-let _entries  = [];  // 구글 시트에서 불러온 방명록 목록
+let _unlocked    = false;
+let _entries     = [];  // 구글 시트에서 불러온 방명록 목록
+let _fanMsgs     = [];  // P.K.H.☆ 메시지 (공개 표시용, 비밀번호 불필요)
+let _diaryHasData = false; // 토끼관찰일지 기존 데이터 존재 여부
 
 // XSS 방지용 이스케이프
 function esc(s) {
@@ -666,7 +814,9 @@ function gbRender() {
     return;
   }
 
-  list.innerHTML = [..._entries].reverse().map(e => `
+  list.innerHTML = [..._entries].reverse()
+    .filter(e => e.nickname !== 'P.K.H.\u2606')
+    .map(e => `
     <div class="gb-entry">
       <div class="gb-entry-head">
         <span class="gb-nick">${esc(e.nickname)}</span>
@@ -686,6 +836,34 @@ function gbRender() {
       el.addEventListener('click', openPwModal);
     });
   }
+  renderFanMsgs();
+}
+
+// P.K.H.☆ 메시지를 메인 탭 소개 아래에 렌더링
+function renderFanMsgs() {
+  const section = document.getElementById('main-fan-section');
+  const list    = document.getElementById('main-fan-list');
+  if (!_fanMsgs.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = [..._fanMsgs].reverse().map(e => `
+    <div style="background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:8px;">
+      <div style="font-size:11px; color:var(--text-light); margin-bottom:5px;">${esc(e.date)}</div>
+      <div style="font-size:13px; color:var(--text); line-height:1.6; white-space:pre-wrap; word-break:break-all;">${esc(e.content)}</div>
+    </div>
+  `).join('');
+}
+
+// P.K.H.☆ 메시지 공개 페치 (비밀번호 불필요)
+async function fetchFanMsgs() {
+  if (!CONFIG.APPS_SCRIPT_URL) return;
+  try {
+    const res  = await fetch(CONFIG.APPS_SCRIPT_URL + '?format=fanmsgs');
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.entries)) {
+      _fanMsgs = data.entries;
+      renderFanMsgs();
+    }
+  } catch (_) {}
 }
 
 // 글자 수 카운터
@@ -698,6 +876,7 @@ function submitEntry() {
   const text = document.getElementById('gb-text').value.trim();
 
   if (!nick)             return alert('닉네임을 입력해주세요.');
+  if (nick === 'P.K.H.☆') return alert('사용이 금지된 닉네임입니다.');
   if (!text)             return alert('내용을 입력해주세요.');
   if (text.length > 140) return alert('140자 이내로 입력해주세요.');
 
@@ -760,7 +939,10 @@ async function fetchEntries(hash) {
 }
 
 // 비밀번호 모달
-function openPwModal() {
+let _pwCallback = null;
+
+function openPwModal(callback) {
+  _pwCallback = typeof callback === 'function' ? callback : null;
   document.getElementById('modal-pw').value         = '';
   document.getElementById('modal-pw').placeholder   = '비밀번호를 입력하세요';
   document.getElementById('modal-pw').style.cssText = '';
@@ -772,18 +954,125 @@ function closePwModal() {
   document.getElementById('pw-modal').classList.add('hidden');
 }
 
+function openDiaryModeModal() {
+  const modal     = document.getElementById('diary-mode-modal');
+  const loadingEl = document.getElementById('diary-mode-loading');
+  const descEl    = document.getElementById('diary-mode-desc');
+  const btnsEl    = document.getElementById('diary-mode-btns');
+  const readBtn   = document.getElementById('diary-read-btn');
+  const writeBtn  = document.getElementById('diary-write-btn');
+
+  // 로딩 스피너만 보이게 모달 열기
+  loadingEl.style.display = 'flex';
+  descEl.style.display    = 'none';
+  btnsEl.style.display    = 'none';
+  modal.classList.remove('hidden');
+
+  const showButtons = (hasData) => {
+    _diaryHasData           = hasData;
+    loadingEl.style.display = 'none';
+    descEl.style.display    = '';
+    btnsEl.style.display    = '';
+    if (hasData) {
+      // 답변 있음 → 읽기 버튼만
+      readBtn.style.display  = '';
+      writeBtn.style.display = 'none';
+    } else {
+      // 답변 없음 → 쓰기 버튼만
+      readBtn.style.display  = 'none';
+      writeBtn.style.display = '';
+    }
+  };
+
+  if (!CONFIG.APPS_SCRIPT_URL) { showButtons(false); return; }
+
+  fetch(CONFIG.APPS_SCRIPT_URL + '?format=diary')
+    .then(r => r.json())
+    .then(data => {
+      const hasData = data.ok && Array.isArray(data.answers) && data.answers.some(a => String(a).trim());
+      showButtons(hasData);
+    })
+    .catch(() => showButtons(false));
+}
+function closeDiaryModeModal() {
+  document.getElementById('diary-mode-modal').classList.add('hidden');
+}
+function _goToDiaryTab() {
+  closeDiaryModeModal();
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector('[data-tab="diary"]').classList.add('active');
+  document.getElementById('tab-diary').classList.add('active');
+}
+function diaryModeView() {
+  closeDiaryModeModal();
+  _goToDiaryTab();
+  // 로딩 시작: 전체 탭 내용 숨기고 스피너 표시
+  document.getElementById('diary-content').style.display = 'none';
+  document.getElementById('diary-loading').classList.add('show');
+  fetch(CONFIG.APPS_SCRIPT_URL + '?format=diary')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('diary-loading').classList.remove('show');
+      document.getElementById('diary-content').style.display = '';
+      document.getElementById('diary-submit-area').style.display = 'none';
+      document.getElementById('diary-fan-section').style.display = 'none';
+      if (data.ok) {
+        DIARY_QS.forEach((_, i) => {
+          const el = document.getElementById('d-ans-' + i);
+          if (el) { el.value = data.answers[i] || ''; el.readOnly = true; }
+        });
+        const fanEl = document.getElementById('d-fan-msg');
+        if (fanEl) fanEl.readOnly = true;
+        showToast('✓ 마지막 저장 답변을 불러왔습니다');
+      } else {
+        showToast('⚠ 답변이 없습니다', true);
+      }
+    })
+    .catch(() => {
+      document.getElementById('diary-loading').classList.remove('show');
+      document.getElementById('diary-content').style.display = '';
+      document.getElementById('diary-submit-area').style.display = 'none';
+      showToast('⚠ 불러오기 실패', true);
+    });
+}
+function diaryModeWrite() {
+  closeDiaryModeModal();
+  openPwModal(() => {
+    _goToDiaryTab();
+    document.getElementById('diary-content').style.display = '';
+    document.getElementById('diary-loading').classList.remove('show');
+    // 편집 모드로 복원
+    DIARY_QS.forEach((_, i) => {
+      const el = document.getElementById('d-ans-' + i);
+      if (el) el.readOnly = false;
+    });
+    const fanEl = document.getElementById('d-fan-msg');
+    if (fanEl) fanEl.readOnly = false;
+    document.getElementById('diary-fan-section').style.display = '';
+    document.getElementById('diary-submit-area').style.display = '';
+  });
+}
+
 async function checkPassword() {
   const input = document.getElementById('modal-pw').value;
   if (!input) return;
 
   const hash = await sha256(input);
   if (hash === CONFIG.MASTER_PW_HASH) {
-    _unlocked = true;
     closePwModal();
-    showToast('목록을 불러오는 중...');
-    await fetchEntries(hash);
-    gbRender();
+    if (_pwCallback) {
+      const cb = _pwCallback;
+      _pwCallback = null;
+      await cb(hash);
+    } else {
+      _unlocked = true;
+      showToast('목록을 불러오는 중...');
+      await fetchEntries(hash);
+      gbRender();
+    }
   } else {
+    _pwCallback = null;
     const inp = document.getElementById('modal-pw');
     inp.style.borderColor = '#e85a5a';
     inp.style.boxShadow   = '0 0 0 3px rgba(232,90,90,.22)';
@@ -804,6 +1093,253 @@ document.getElementById('modal-pw').addEventListener('keydown', e => {
 document.getElementById('pw-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('pw-modal')) closePwModal();
 });
+
+/* ══════════════════════════════════════
+   활동보고서
+══════════════════════════════════════ */
+const REPORT_QS = [
+  '경호를 처음 알게 된 계기',
+  '경호의 첫인상',
+  '가장 좋아하는 매력 포인트',
+  '가장 좋아하는 필모',
+  '가장 닮은 동물',
+  '빛난다고 생각한 순간',
+  '불가 세계관에 떨어진다면 만나보고싶은 캐릭터 (경호 캐릭터 한정)',
+  '경호로 보고 싶은 극과 캐릭터',
+  '나에게 경호란?',
+  '배우 박경호를 칭찬 감옥에 가둬봅시다.',
+];
+
+function initReport() {
+  const form = document.getElementById('report-form');
+  form.innerHTML = REPORT_QS.map((q, i) => `
+    <div class="diary-q">
+      <div class="diary-q-label">
+        <span class="diary-q-num">${i + 1}</span>
+        <span class="diary-q-text">${esc(q)}</span>
+      </div>
+      <textarea id="r-ans-${i}" class="diary-answer" placeholder="답변을 입력해주세요" maxlength="200"></textarea>
+    </div>
+  `).join('');
+}
+
+async function submitReport() {
+  if (!CONFIG.APPS_SCRIPT_URL) { showToast('⚠ APPS_SCRIPT_URL 미설정', true); return; }
+  const answers = REPORT_QS.map((_, i) => (document.getElementById('r-ans-' + i)?.value.trim() || ''));
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const date = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;
+  try {
+    fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        type: 'report', secret: CONFIG.SHEET_SECRET,
+        questions: REPORT_QS, answers, date,
+      }),
+    });
+  } catch (_) {}
+  REPORT_QS.forEach((_, i) => {
+    const el = document.getElementById('r-ans-' + i);
+    if (el) el.value = '';
+  });
+  showToast('✓ 활동보고서가 제출되었습니다');
+}
+
+/* ══════════════════════════════════════
+   토끼관찰일지
+══════════════════════════════════════ */
+const DIARY_QS = [
+  '등산을 가기로 했다. 불가보이즈 중 한 명을 무조건 데려가야한다면?',
+  '필모극 중 한 세계관에서 박경호로 살아야 한다면?',
+  '그동안 맡은 캐릭터들을 나이순으로 배치하시오.\n(필로스, 골드문트, 니키, 사이먼, 천천, 운검, 루치뇰로, V)',
+  '그동안 맡은 배역 중 가장 어른스러운 인물과 가장 아이 같은 인물은?',
+  '그동안 만난 상대 캐릭터 중 가장 등짝 때려주고 싶은 캐릭터와 가장 안아주고 싶은 캐릭터는?',
+  '그동안 했던 캐릭터 중 가장 등짝 때려주고 싶은 캐릭터와 가장 안아주고 싶은 캐릭터는?',
+  '배우님이 생각하기에 팬들이 가장 좋아하는 캐릭터는?',
+  '그동안 했던 필모 중 가장 애착이 가고 다시 해보고 싶은 필모는?',
+  '스스로 생각하기에 자신에게 제일 잘 어울리는 모에화는?',
+  '캐릭터를 위해 다시 금발을 한다, 안 한다.',
+  '그동안 입어본 의상 중 이 의상은 탐난다, 싶었던 캐릭터는?',
+  '그동안 해온 극 중 자신의 캐릭터를 제외하고 해보고 싶은 캐릭터는?',
+  '꼭 해보고 싶은 극이나 캐릭터가 있다면?',
+  '무대에서 만나 보고 싶은 세계관이 있다면? (시대나 장르 등)',
+  '지금까지 관극했던 극 중에서 가장 재밌었던 극은?',
+  '뮤지컬 배우가 되어야겠다, 하는 다짐을 하게 된 계기가 된 극이 있다면?',
+  '데뷔 이전의 MJStarfish 극 중 해보고 싶은 캐릭터나 극이 있다면?',
+  '이건 매일 먹어도 안 질린다 하는 메뉴가 있다면?\n1. 제육볶음  2. 돈가스  3. 국밥  4. 기타(주관식!)',
+  '가보고 싶은 여행지가 있다면?',
+  '박경호란 어떤 사람인가?',
+];
+
+function initDiary() {
+  const form = document.getElementById('diary-form');
+  form.innerHTML = DIARY_QS.map((q, i) => `
+    <div class="diary-q">
+      <div class="diary-q-label">
+        <span class="diary-q-num">${i + 1}</span>
+        <span class="diary-q-text">${esc(q)}</span>
+      </div>
+      <textarea id="d-ans-${i}" class="diary-answer" placeholder="답변을 입력해주세요" maxlength="200"></textarea>
+    </div>
+  `).join('');
+}
+
+async function saveDiaryImage() {
+  await document.fonts.ready;
+  const answers = DIARY_QS.map((_, i) => (document.getElementById('d-ans-' + i)?.value.trim() || ''));
+  const nick    = answers[0] || '익명';
+  const dateStr = new Date().toLocaleDateString('ko-KR');
+
+  const W = 720, PAD = 44, LH = 21, SCALE = 2;
+  const QW = W - PAD * 2;
+  const F_Q = 'bold 13px "Noto Sans KR", sans-serif';
+  const F_A = '13px "Noto Sans KR", sans-serif';
+
+  const mC = document.createElement('canvas');
+  mC.width = W; mC.height = 10;
+  const mX = mC.getContext('2d');
+  function lineCount(text, font, mw) {
+    mX.font = font;
+    if (!text) return 1;
+    let n = 1, line = '';
+    for (const ch of text) {
+      if (mX.measureText(line + ch).width > mw) { n++; line = ch; }
+      else line += ch;
+    }
+    return n;
+  }
+
+  let H = 152;
+  DIARY_QS.forEach((_, i) => {
+    H += 28 + lineCount(answers[i] || ' ', F_A, QW - 18) * LH + 18;
+  });
+  H += 52;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * SCALE;
+  canvas.height = H * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  ctx.fillStyle = '#fdf9f3';
+  ctx.fillRect(0, 0, W, H);
+
+  const grd = ctx.createLinearGradient(0, 0, W, 120);
+  grd.addColorStop(0, '#f5f0a0');
+  grd.addColorStop(1, '#b8d4d9');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, 120);
+
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 21px "Noto Sans KR", sans-serif';
+  ctx.fillStyle = '#3d6e76';
+  ctx.fillText('🐰 토끼관찰일지', W / 2, 46);
+  ctx.font = '13px "Noto Sans KR", sans-serif';
+  ctx.fillStyle = '#3d6e76';
+  ctx.fillText(nick + ' · ' + dateStr, W / 2, 72);
+  ctx.font = '11px "Noto Sans KR", sans-serif';
+  ctx.fillStyle = '#6a8e96';
+  ctx.fillText('2026 박경호 생일카페 래빗 러버스 클럽', W / 2, 96);
+  ctx.textAlign = 'left';
+
+  function drawWrap(text, x, startY, maxW, font, color) {
+    ctx.font = font; ctx.fillStyle = color;
+    const t = text || '(미작성)';
+    let line = '', cy = startY;
+    for (const ch of t) {
+      if (ctx.measureText(line + ch).width > maxW) {
+        ctx.fillText(line, x, cy); cy += LH; line = ch;
+      } else line += ch;
+    }
+    if (line) ctx.fillText(line, x, cy);
+    return cy - startY + LH;
+  }
+
+  let y = 146;
+  DIARY_QS.forEach((q, i) => {
+    ctx.fillStyle = '#6b9fa8';
+    ctx.beginPath();
+    ctx.arc(PAD + 10, y - 5, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = 'bold 10px "Noto Sans KR", sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(i + 1), PAD + 10, y - 1);
+    ctx.textAlign = 'left';
+
+    ctx.font = F_Q; ctx.fillStyle = '#3d6e76';
+    ctx.fillText(q, PAD + 26, y);
+    y += 26;
+
+    const used = drawWrap(answers[i], PAD + 16, y, QW - 16, F_A, '#1a3a44');
+    y += used;
+
+    if (i < DIARY_QS.length - 1) {
+      ctx.strokeStyle = '#dceaec'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(PAD, y + 6); ctx.lineTo(W - PAD, y + 6); ctx.stroke();
+    }
+    y += 18;
+  });
+
+  ctx.font = '11px "Noto Sans KR", sans-serif';
+  ctx.fillStyle = '#9bbdc3'; ctx.textAlign = 'center';
+  ctx.fillText('© 2026 박경호 생일카페 래빗 러버스 클럽', W / 2, H - 18);
+
+  const a = document.createElement('a');
+  a.download = '토끼관찰일지_' + nick + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+function openDiarySubmitModal() {
+  openPwModal(async () => { await doSubmitDiary(); });
+}
+
+async function doSubmitDiary() {
+  if (_diaryHasData) {
+    document.getElementById('diary-overwrite-modal').classList.remove('hidden');
+    return;
+  }
+  await _runDiarySubmit();
+}
+
+async function _runDiarySubmit() {
+  if (!CONFIG.APPS_SCRIPT_URL) { showToast('⚠ APPS_SCRIPT_URL 미설정', true); return; }
+  const answers = DIARY_QS.map((_, i) => (document.getElementById('d-ans-' + i)?.value.trim() || ''));
+  const fanMsg  = document.getElementById('d-fan-msg')?.value.trim();
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const date = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;
+  showToast('✓ 토끼관찰일지가 저장되었습니다');
+  _diaryHasData = true;
+  // 일지 전송
+  try {
+    fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        type: 'diary', secret: CONFIG.SHEET_SECRET,
+        questions: DIARY_QS, answers, date,
+      }),
+    });
+  } catch (_) {}
+  // 팬 메시지가 있으면 방명록에도 저장
+  if (fanMsg) {
+    const fanEntry = { id: Date.now().toString(), nickname: 'P.K.H.☆', content: fanMsg, date };
+    _entries.push(fanEntry);
+    _fanMsgs.push(fanEntry);
+    renderFanMsgs();
+    gbRender();
+    try {
+      fetch(CONFIG.APPS_SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ ...fanEntry, secret: CONFIG.SHEET_SECRET }),
+      });
+    } catch (_) {}
+  }
+}
 
 /* ══════════════════════════════════════
    갤러리
@@ -933,10 +1469,26 @@ function ytNext()   { if (!_yt) return; _yt.nextVideo();     setTimeout(updateTi
 ══════════════════════════════════════ */
 gbRender();
 initGallery();
+initReport();
+initDiary();
 showRandomPoster();   // 페이지 첫 로드 시 포스터 표시
+fetchFanMsgs();       // P.K.H.☆ 메시지 공개 불러오기
+document.getElementById('d-fan-msg').addEventListener('input', function () {
+  document.getElementById('fan-char-num').textContent = this.value.length;
+});
 </script>
 
 <!-- YouTube IFrame API (onYouTubeIframeAPIReady 정의 이후 로드) -->
 <script src="https://www.youtube.com/iframe_api"></script>
+
+<!-- Service Worker 등록 -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(() => {}); // 등록 실패 시 조용히 무시
+    });
+  }
+</script>
 </body>
 </html>
