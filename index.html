@@ -427,6 +427,18 @@
     }
     @keyframes diary-spin { to { transform: rotate(360deg); } }
 
+    /* ─── 갤러리 로딩 ─── */
+    #gallery-loading {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      min-height: 52vh;
+      padding: 40px 0;
+    }
+    #gallery-loading.show { display: flex; }
+
     /* ─── 스크롤바 ─── */
     ::-webkit-scrollbar       { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -493,7 +505,11 @@
 
     <!-- 갤러리 -->
     <div id="tab-gallery" class="tab-content">
-      <div id="gallery-grid" class="gallery-grid"></div>
+      <div id="gallery-loading">
+        <div class="spinner"></div>
+        <div style="font-size:13px; color:var(--text-light); letter-spacing:.2px;">사진 불러오는 중…</div>
+      </div>
+      <div id="gallery-grid" class="gallery-grid" style="display:none;"></div>
     </div>
 
     <!-- 활동보고서 -->
@@ -673,6 +689,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('tab-' + t).classList.add('active');
     if (t === 'main') showRandomPoster();
+    if (t === 'gallery') initGallery();
   });
 });
 
@@ -1344,20 +1361,53 @@ async function _runDiarySubmit() {
 /* ══════════════════════════════════════
    갤러리
 ══════════════════════════════════════ */
+let _galleryInit = false;
+
 function initGallery() {
-  const grid = document.getElementById('gallery-grid');
-  const imgs = CONFIG.GALLERY;
+  if (_galleryInit) return;
+  _galleryInit = true;
+
+  const grid      = document.getElementById('gallery-grid');
+  const loadingEl = document.getElementById('gallery-loading');
+  const imgs      = CONFIG.GALLERY;
 
   if (!imgs.length) {
+    loadingEl.classList.remove('show');
+    grid.style.display = '';
     grid.innerHTML = '<div class="gal-empty">📷 <code>images/</code> 폴더에 이미지를 추가한 뒤<br><code>CONFIG.GALLERY</code> 배열에 파일명을 입력해주세요</div>';
     return;
   }
 
+  // 로딩 스피너 표시, 그리드 숨김
+  loadingEl.classList.add('show');
+  grid.style.display = 'none';
+
   grid.innerHTML = imgs.map((name, i) =>
     `<div class="gal-item" onclick="openLb(${i})">
-       <img src="images/${esc(name)}" alt="gallery ${i + 1}" loading="lazy">
+       <img src="images/${esc(name)}" alt="gallery ${i + 1}">
      </div>`
   ).join('');
+
+  // 모든 이미지 로드 완료 추적
+  const imgEls = Array.from(grid.querySelectorAll('img'));
+  let loaded = 0;
+
+  function onDone() {
+    loaded++;
+    if (loaded >= imgEls.length) {
+      loadingEl.classList.remove('show');
+      grid.style.display = '';
+    }
+  }
+
+  imgEls.forEach(img => {
+    if (img.complete) {
+      onDone();
+    } else {
+      img.addEventListener('load',  onDone, { once: true });
+      img.addEventListener('error', onDone, { once: true }); // 오류도 완료 처리
+    }
+  });
 }
 
 // 라이트박스
@@ -1468,7 +1518,6 @@ function ytNext()   { if (!_yt) return; _yt.nextVideo();     setTimeout(updateTi
    초기화
 ══════════════════════════════════════ */
 gbRender();
-initGallery();
 initReport();
 initDiary();
 showRandomPoster();   // 페이지 첫 로드 시 포스터 표시
