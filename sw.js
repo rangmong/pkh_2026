@@ -4,7 +4,7 @@
  * - Google Apps Script / YouTube API 등 외부 요청은 캐시 제외
  */
 
-const CACHE_NAME  = 'pkh2026-v2';
+const CACHE_NAME  = 'pkh2026-v3';
 const CACHE_ASSETS = [
   './',
   './index.html',
